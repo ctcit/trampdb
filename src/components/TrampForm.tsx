@@ -5,9 +5,8 @@ import { Marker, useMapEvents } from "react-leaflet"
 import { RegionContext } from "../App"
 import { ITramp, EmptyTramp, TrampLatLngIfValid, SetTrampLatLng, TrampDescription } from "../interfaces/ITramp";
 import { TopoMap } from "./TopoMap"
-import { Editor, EditorState } from 'react-draft-wysiwyg';
-import { convertFromRaw, RawDraftContentState } from 'draft-js';
-import '../../node_modules/react-draft-wysiwyg/dist/react-draft-wysiwyg.css';
+import { DescriptionEditor } from "./DescriptionEditor"
+import { RawDraftContentState } from "draft-js"
 
 interface IFormControlProps {
   id: string
@@ -107,23 +106,11 @@ const LocationSelect : FC<ILocationSelectProps> = (props) => {
   )
 }
 
-interface IDescriptionEditorProps {
-  description: RawDraftContentState | undefined
-  onStateChanged: (contentState: RawDraftContentState) => void
-}
-
-const DescriptionEditor = (props: IDescriptionEditorProps) => {
-  return <Editor
-         initialContentState={props.description}
-         onContentStateChange={props.onStateChanged} />
-}
-
 interface ITrampFormProps {
   tramp?: ITramp
   submitLabel: string
   handleOnSubmit: (tramp: ITramp) => void
 }
-
 
 export const TrampForm = ( props: ITrampFormProps ) : JSX.Element  => {
   const regions = useContext(RegionContext)
@@ -182,11 +169,6 @@ export const TrampForm = ( props: ITrampFormProps ) : JSX.Element  => {
   }
 
   const latLng = TrampLatLngIfValid(tramp)
-
-  //const initialDescription = ( props.tramp !== undefined ) ? props.tramp.route_description : {} as RawDraftContentState
-
-      /* <FormControl type="textarea" rows="10" id="route_description" label="Description" required invalidMessage="Must enter a description"
-       value={tramp.route_description} placeholder="Detailed route description and any other useful information such as access permissions needed" onChange={handleInputChanged} /> */
 
   return (
     <Form noValidate validated={validated} onSubmit={handleOnSubmit}>

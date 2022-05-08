@@ -15,3 +15,18 @@
 .App-link {
   color: #61dafb;
 }
+
+.description-editor-wrapper {
+  padding: 0rem;
+  border: 1px solid #ced4da !important;
+}
+
+.description-editor {
+  padding: 0rem 1rem;
+  max-height: 35rem;
+  overflow: auto;
+}
+.rdw-editor-toolbar.description-editor-toolbar{
+  border: 1px solid #ced4da;
+  background-color: #faf9ff;
+}

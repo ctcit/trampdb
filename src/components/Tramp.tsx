@@ -5,7 +5,7 @@ import { ITramp, TrampDescriptionHtml, TrampLatLngIfValid } from "../interfaces/
 import { TopoMap } from "./TopoMap"
 import { RegionContext } from "../App"
 import React, { useContext, useEffect } from "react"
-
+import DOMPurify from "dompurify";
 
 interface IGPXProps {
   gpx: string
@@ -59,7 +59,7 @@ export const Tramp = ( props: ITrampProps ) : JSX.Element  => {
             <dd>{region.name}</dd></React.Fragment>
             }
           </dl>
-          <p dangerouslySetInnerHTML={{__html: TrampDescriptionHtml(tramp)}}/>
+          <p dangerouslySetInnerHTML={{__html: DOMPurify.sanitize(TrampDescriptionHtml(tramp))}}/>
           { latLng && (
            <TopoMap style={{height: '600px'}} className="mb-4" zoom={13} latLng={latLng}>
             <Marker position={latLng}/>
