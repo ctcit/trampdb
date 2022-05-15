@@ -16,6 +16,7 @@ import { TrampList } from './components/TrampList';
 import IRegion from "./interfaces/IRegion"
 import RegionDataService from './utilities/region.service'
 import { RegionDisplay } from "./components/RegionDisplay";
+import { CreateFromTripReports as GroupTripReports } from "./components/GroupTripReports";
 
 export const RegionContext = createContext<IRegion[]|undefined>(undefined)
 
@@ -49,6 +50,7 @@ function App() {
               <Route path="/new" element={<NewTramp />} />
               <Route path="/regions" element={<RegionList />} />
               <Route path="/" element={<TrampList title=""/>} />
+              <Route path="/group" element={<GroupTripReports/>} />
               <Route path="*" element={<TrampList title='unmatched!' />} />
             </Routes>
           </Container>

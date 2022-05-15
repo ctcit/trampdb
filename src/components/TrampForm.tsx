@@ -184,7 +184,7 @@ export const TrampForm = ( props: ITrampFormProps ) : JSX.Element  => {
       </FormSelect>
       <FormSelect label="Type" id="type" value={tramp.type} onChange={handleSelectChanged} required>
         <option>Day</option>
-        <option>Weekend</option>
+        <option>Overnight</option>
         <option value="multiday">Multiday</option>
         <option value="basecamp">Base Camp</option>
       </FormSelect>

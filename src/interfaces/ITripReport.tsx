@@ -13,4 +13,5 @@ export interface ITripReport
   date_display: string
   uploader_name: string
   gpxs: IGPX[]
+  tramps: number[]
 }
