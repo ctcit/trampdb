@@ -10,9 +10,17 @@ export interface ITramp
   id: number
   name: string
   summary: string
-  route_description: string
-  length: string
-  grades: string
+  routeDescription: string
+  length: number
+  timeLow: number
+  timeHigh: number
+  goodInSummer: boolean,
+  goodInWinter: boolean,
+  seasonalityDescription: string,
+  access: string,
+  caveats: string,
+  gradeLow: string
+  gradeHigh: string
   type: string
   northing: number
   easting: number
@@ -24,9 +32,17 @@ export const EmptyTramp = () : ITramp => {
       id: 0,
       name:'',
       summary:'',
-      route_description: '',
-      length: '',
-      grades:'',
+      routeDescription: '',
+      length: 0,
+      timeLow: 0,
+      timeHigh: 0,
+      goodInSummer:false,
+      goodInWinter:false,
+      seasonalityDescription:'',
+      access:'',
+      caveats:'',
+      gradeLow:'',
+      gradeHigh:'',
       type:'',
       northing: 0,
       easting: 0,
@@ -59,20 +75,59 @@ export const TrampLatLngIfValid = (tramp:ITramp) : LatLng|undefined => {
 }
 
 export const TrampDescription = (tramp:ITramp) : RawDraftContentState => {
-    try
-    {
-      const description = JSON.parse(tramp.route_description) as RawDraftContentState
-      // This is to trigger an exception if the RawDraftContentState is invalid
-      // so we can fall back to the code in catch
-      convertFromRaw(description)
-      return description
-    }
-    catch
-    {
-      return convertToRaw( ContentState.createFromText(tramp.route_description) )
-    }
+  try {
+    const description = JSON.parse(tramp.routeDescription) as RawDraftContentState
+    // This is to trigger an exception if the RawDraftContentState is invalid
+    // so we can fall back to the code in catch
+    convertFromRaw(description)
+    return description
+  } catch {
+    return convertToRaw(ContentState.createFromText(tramp.routeDescription))
+  }
 }
 
 export const TrampDescriptionHtml = (tramp:ITramp) => {
-    return stateToHTML(convertFromRaw(TrampDescription(tramp)))
+  return stateToHTML(convertFromRaw(TrampDescription(tramp)))
+}
+
+export const TrampGrade = (tramp: ITramp) => {
+  let grade = tramp.gradeLow
+  if (tramp.gradeHigh != "") {
+    grade += " to "+tramp.gradeHigh
+  }
+  return grade
+}
+
+type TrampType = { label: string, value: string }
+export const TrampTypes: TrampType[] = [
+  { label: "Day", value: "day" },
+  { label: "Overnight", value: "overnight" },
+  { label: "Multiday", value: "multiday" },
+  { label: "Base Camp", value: "basecamp" },
+]
+
+export const TrampType = (tramp: ITramp): string  => {
+  var trampType = TrampTypes.find( t => t.value == tramp.type.toLowerCase() )
+  if (!!trampType) {
+    return trampType.label
+  }
+  return ""
+}
+
+export const TrampTimeOfYear = (tramp: ITramp) => {
+  if (tramp.goodInSummer && !tramp.goodInWinter) {
+    return "Better in Summer"
+  } else if (!tramp.goodInSummer && tramp.goodInWinter) {
+    return "Better in Winter"
+  } else {
+    return "Good at any time of year"
+  }
+}
+
+export const TrampLengthRelevant = (tramp: ITramp) => {
+  return (tramp.type != "basecamp")
+}
+
+export const TrampLengthUnits = (tramp: ITramp) => {
+  return (tramp.type == "multiday") ? "days" : "hours"
 }

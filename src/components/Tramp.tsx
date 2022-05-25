@@ -1,11 +1,12 @@
 import L, { LatLng } from "leaflet"
 import  "leaflet-gpx"
 import { Marker, useMap } from "react-leaflet"
-import { ITramp, TrampDescriptionHtml, TrampLatLngIfValid } from "../interfaces/ITramp";
+import { ITramp, TrampDescriptionHtml, TrampGrade, TrampLatLngIfValid, TrampTimeOfYear, TrampType } from "../interfaces/ITramp";
 import { TopoMap } from "./TopoMap"
 import { RegionContext } from "../App"
 import React, { useContext, useEffect } from "react"
 import DOMPurify from "dompurify";
+import { Badge } from "react-bootstrap";
 
 interface IGPXProps {
   gpx: string
@@ -46,12 +47,18 @@ export const Tramp = ( props: ITrampProps ) : JSX.Element  => {
   const region = (regions) ? regions.find((region) => region.id == tramp.region) : undefined
   return <div>
           <h1>{tramp.name}</h1>
+          <div className="pb-1">{(tramp.caveats != '') && tramp.caveats.split(',').map(c => <Badge bg="success" className="mx-1" key={c}>{c}</Badge>) }</div>
           <p><i>{tramp.summary}</i></p>
           <dl>
             <dt>Grade</dt>
-            <dd>{tramp.grades}</dd>
+            <dd>{TrampGrade(tramp)}
+            </dd>
+            <dt>Time Of Year</dt>
+            <dd>{TrampTimeOfYear(tramp)}
+            { (tramp.seasonalityDescription !== "") && <>. <i>{tramp.seasonalityDescription}</i></> }
+            </dd>
             <dt>Type</dt>
-            <dd>{tramp.type}</dd>
+            <dd>{TrampType(tramp)}</dd>
             <dt>Approximate length</dt>
             <dd>{tramp.length} km</dd>
             {region && <React.Fragment>

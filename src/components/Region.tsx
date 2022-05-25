@@ -3,7 +3,7 @@ import { useState } from "react"
 import { Table } from "react-bootstrap"
 import { Link, RouteProps } from "react-router-dom"
 import IRegion from "../interfaces/IRegion"
-import { ITramp } from "../interfaces/ITramp";
+import { ITramp, TrampGrade } from "../interfaces/ITramp";
 import TrampDataService from '../utilities/tramp.service'
 
 interface IRegionProps extends RouteProps {
@@ -51,7 +51,7 @@ export const Region = ( props: IRegionProps) : JSX.Element  => {
                   </Link>
                 </td>
                 <td>{tramp.type}</td>
-                <td>{tramp.grades}</td>
+                <td>{TrampGrade(tramp)}</td>
               </tr>
             )}
           </tbody>

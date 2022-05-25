@@ -30,3 +30,9 @@
   border: 1px solid #ced4da;
   background-color: #faf9ff;
 }
+
+.form-label {
+  size: 14px;
+  color: #24292f;
+  font-weight: 600;
+}

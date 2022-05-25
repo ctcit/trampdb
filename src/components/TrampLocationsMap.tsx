@@ -2,7 +2,7 @@ import { LatLng } from "leaflet"
 import { Marker, Popup } from "react-leaflet"
 import { Link } from "react-router-dom"
 import { defaultLat, defaultLong } from "../config"
-import { ITramp, TrampLatLng } from "../interfaces/ITramp"
+import { ITramp, TrampGrade, TrampLatLng } from "../interfaces/ITramp"
 import { TopoMap } from "./TopoMap"
 
 interface ITrampLocationsMapProps {
@@ -22,7 +22,7 @@ export const TrampLocationsMap = (props:ITrampLocationsMapProps) => {
             <Marker position={TrampLatLng(tramp)} key={"trampmarker" + tramp.id}>
                 <Popup>
                     <Link to={"/tramp/" + tramp.id}><h3>{tramp.name}</h3></Link>
-                    {tramp.grades}, {tramp.length} km
+                    {TrampGrade(tramp)}, {tramp.length} km
                 </Popup>
             </Marker>
             ) } )

@@ -1,110 +1,17 @@
-import { LatLng, LeafletMouseEvent } from "leaflet"
-import React, { ElementType, FC, useContext, useState } from "react"
-import { Form, Button } from "react-bootstrap"
-import { Marker, useMapEvents } from "react-leaflet"
+import { LatLng } from "leaflet"
+import React, { useContext, useState } from "react"
+import { Form, Button, Row, InputGroup } from "react-bootstrap"
 import { RegionContext } from "../App"
-import { ITramp, EmptyTramp, TrampLatLngIfValid, SetTrampLatLng, TrampDescription } from "../interfaces/ITramp";
-import { TopoMap } from "./TopoMap"
+import { ITramp, EmptyTramp, TrampLatLngIfValid, SetTrampLatLng, TrampDescription, TrampLengthUnits, TrampLengthRelevant } from "../interfaces/ITramp";
 import { DescriptionEditor } from "./DescriptionEditor"
 import { RawDraftContentState } from "draft-js"
-
-interface IFormControlProps {
-  id: string
-  value: string
-  label: string
-  placeholder: string
-  type?: ElementType<any>
-  onChange: React.ChangeEventHandler<HTMLInputElement>
-  inputType?: string
-  className?: string
-  rows?: string
-  required?: boolean
-  invalidMessage?: string
-}
-
-const FormControl = (props : IFormControlProps) => {
-  return (
-  <Form.Group controlId={props.id} className="mb-3">
-    <Form.Label>{props.label}</Form.Label>
-    <Form.Control
-      className={props.className}
-      type={props.inputType}
-      name={props.id}
-      value={props.value}
-      placeholder={props.placeholder}
-      onChange={props.onChange}
-      as={props.type}
-      rows={props.rows}
-      required={props.required}
-    />
-      {props.invalidMessage && <Form.Control.Feedback type="invalid">{props.invalidMessage}</Form.Control.Feedback>}
-  </Form.Group>
-  )
-}
-
-interface IFormSelectProps {
-  id: string
-  label: string
-  value: string
-  onChange: React.ChangeEventHandler<HTMLSelectElement>
-  className?: string
-  required?: boolean
-  invalidMessage?: string
-}
-
-const FormSelect : FC<IFormSelectProps> = (props, children) => {
-  return (
-  <Form.Group controlId={props.id} className="mb-3">
-    <Form.Label>{props.label}</Form.Label>
-    <Form.Select
-      className={props.className}
-      name={props.id}
-      value={props.value}
-      onChange={props.onChange}
-      required={props.required}
-      >
-        <option></option>
-        {props.children}
-      </Form.Select>
-      {props.invalidMessage && <Form.Control.Feedback type="invalid">{props.invalidMessage}</Form.Control.Feedback>}
-  </Form.Group>
-  )
-}
-
-interface ILocationMarkerProps {
-  onLocationChange: (latLng: LatLng) => void
-  latLng?: LatLng
-}
-const LocationMarker = (props: ILocationMarkerProps ) => {
-  const [position, setPosition] = useState<LatLng|undefined>(props.latLng)
-  const map = useMapEvents({
-    click(event: LeafletMouseEvent) {
-      setPosition(event.latlng)
-      props.onLocationChange(event.latlng)
-    },
-  })
-
-  return position === undefined ? null : (
-    <Marker position={position}/>
-  )
-}
-
-interface ILocationSelectProps {
-  onChange: (latLng: LatLng) => void
-  latLng?: LatLng
-}
-
-const LocationSelect : FC<ILocationSelectProps> = (props) => {
-  const zoom: number = props.latLng ? 13 : 9
-  return (
-    <Form.Group>
-      <Form.Label>Select approximate location</Form.Label>
-      <TopoMap style={{height: '600px'}} className="mb-4" zoom={zoom} latLng={props.latLng}>
-         <LocationMarker onLocationChange={props.onChange} latLng={props.latLng}/>
-      </TopoMap>
-    </Form.Group>
-  )
-}
+import Slider from 'rc-slider';
+import 'rc-slider/assets/index.css';
+import { FormControl } from "../controls/FormControl"
+import { FormSelect } from "../controls/FormSelect"
+import { LocationSelect } from "../controls/LocationSelect";
+import { CaveatsSelect } from "../controls/CaveatsSelect";
+import { TimeOfYearSelector } from "../controls/TimeOfYearSelector";
 
 interface ITrampFormProps {
   tramp?: ITramp
@@ -115,8 +22,6 @@ interface ITrampFormProps {
 export const TrampForm = ( props: ITrampFormProps ) : JSX.Element  => {
   const regions = useContext(RegionContext)
   const [tramp, setTramp] = useState(props.tramp ? props.tramp : EmptyTramp())
-  //const [validationMsgs, setValidationMsgs] = useState(
-  //  Object.keys(tramp).map((key) => [key, '']))
   const [validated, setValidated] = useState(false)
 
   const handleOnSubmit: React.FormEventHandler<HTMLFormElement> = (event) => {
@@ -164,38 +69,219 @@ export const TrampForm = ( props: ITrampFormProps ) : JSX.Element  => {
   const handleDescriptionChanged = (description: RawDraftContentState) => {
     setTramp((prevState) => ({
       ...prevState,
-      route_description: JSON.stringify(description)
+      routeDescription: JSON.stringify(description)
     }))
   }
 
+  const handleLengthIsRangeChanged: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+    const value = event.target.checked
+    console.log(value)
+    setTramp((prevState) => ({
+      ...prevState,
+      timeHigh: (value) ? 0 : -1
+    }));
+  }
+
   const latLng = TrampLatLngIfValid(tramp)
+  const handleStyle:React.CSSProperties = {width:20, height:20}
+  const markStyle:React.CSSProperties = {
+    fontSize: "var(--bs-body-font-size)",
+    color: "var(--bs-body-color)"
+  }
+
+  const marks:any = {
+    0: {
+      style: markStyle,
+      label: 'Easy'
+    },
+    2: {
+      style: markStyle,
+      label: 'Moderate'
+    },
+    4: {
+      style: markStyle,
+      label: 'Hard'
+    },
+  }
+
+  const gradeMap = new Map<string, number>([
+    ["Easy", 0],
+    ["Easy-Moderate", 1],
+    ["Moderate", 2],
+    ["Moderate-Hard", 3],
+    ["Hard", 4],
+  ])
+
+  const gradeText = (grade: number | undefined) : string => {
+    if (grade !== undefined) {
+      for(const [key, value] of gradeMap) {
+        if (value == grade) {
+          return key
+        }
+      }
+    }
+    return ""
+  }
+
+  const toGradeRange = (tramp:ITramp): number[]  => {
+    const gradeLow = gradeMap.get(tramp.gradeLow)
+    const gradeHigh = gradeMap.get(tramp.gradeHigh)
+    if (gradeLow === undefined && gradeHigh !== undefined) {
+      return [gradeHigh, gradeHigh]
+    } else if (gradeHigh === undefined && gradeLow !== undefined) {
+      return [gradeLow, gradeLow]
+    } else if (gradeHigh !== undefined && gradeLow !== undefined) {
+      return [gradeHigh, gradeLow]
+    }
+    return [2,2]
+  }
+
+
+  const handleGradeChanged = (grade: number|number[]) => {
+    console.log(grade)
+    if (Array.isArray(grade) && grade.length>1) {
+      console.log(gradeText(grade[0]) + ' '+gradeText(grade[1]))
+      setTramp((prevState) => ({
+        ...prevState,
+        gradeLow: gradeText(grade[0]),
+        gradeHigh: gradeText(grade[1])
+      }))
+    } else if (typeof grade == "number") {
+      console.log(gradeText(grade))
+      setTramp((prevState) => ({
+        ...prevState,
+        gradeLow: gradeText(grade),
+        gradeHigh: ""
+      }))
+    }
+  }
+
+  const handleSeasonalityChanged :React.ChangeEventHandler<HTMLInputElement> = (e) => {
+    if (e.target.value != 'on') {
+      return
+    }
+    const selected = e.target.id
+    if (selected == 'summerOnly') {
+      setTramp((prevState) => ({
+        ...prevState,
+        goodInSummer: true,
+        goodInWinter: false,
+      }))
+    } else if (selected == 'winterOnly') {
+      setTramp((prevState) => ({
+        ...prevState,
+        goodInSummer: false,
+        goodInWinter: true,
+      }))
+    } else if (selected == 'anyTimeOfYear') {
+      setTramp((prevState) => ({
+        ...prevState,
+        goodInSummer: true,
+        goodInWinter: true,
+      }))
+    }
+  }
+
+  const handleCaveatsChanged = (value: string) => {
+    setTramp((prevState) => ({
+      ...prevState,
+      caveats: value
+    }));
+  }
 
   return (
-    <Form noValidate validated={validated} onSubmit={handleOnSubmit}>
-      <FormControl id="name" label="Name" value={tramp.name} required
-        placeholder="Name of the tramp" onChange={handleInputChanged} invalidMessage="Name is required"/>
-      <FormControl id="summary" label="Summary" value={tramp.summary}
-        placeholder="A brief summary" onChange={handleInputChanged} />
-      <DescriptionEditor description={TrampDescription(tramp)} onStateChanged={handleDescriptionChanged} />
-      <FormSelect label="Grade" id="grades" value={tramp.grades} onChange={handleSelectChanged} required>
-        <option>Easy</option>
-        <option>Moderate</option>
-        <option>Hard</option>
-      </FormSelect>
-      <FormSelect label="Type" id="type" value={tramp.type} onChange={handleSelectChanged} required>
-        <option>Day</option>
-        <option>Overnight</option>
-        <option value="multiday">Multiday</option>
-        <option value="basecamp">Base Camp</option>
-      </FormSelect>
-      <FormSelect label="Region" id="region" value={tramp.region.toString()} onChange={handleSelectChanged} required
-       invalidMessage="Must select a region">
-      { regions && regions.map((region) => <option value={region.id.toString()} key={"region"+region.id}>{region.name}</option>) }
-      </FormSelect>
-      <FormControl inputType="number" id="length" label="Length" value={tramp.length}
-        placeholder="Approximate length in km" onChange={handleInputChanged} />
-      <LocationSelect onChange={handleLocationChanged} latLng={latLng}/>
-      <Button type="submit" variant="primary">{props.submitLabel}</Button>
-    </Form>
+    <Row className="justify-content-center">
+      <Form noValidate validated={validated} onSubmit={handleOnSubmit} className="col-lg-9">
+        <FormControl id="name" label="Name" value={tramp.name} required groupClassName="mb-4"
+          placeholder="Name of the tramp" onChange={handleInputChanged} invalidMessage="Name is required" />
+        <FormControl id="summary" label="Summary" value={tramp.summary} groupClassName="mb-4"
+          placeholder="A brief summary" onChange={handleInputChanged} />
+        <FormSelect label="Type" id="type" value={tramp.type} onChange={handleSelectChanged} required controlClassName="col-md-4">
+          <option>Day</option>
+          <option>Overnight</option>
+          <option value="multiday">Multiday</option>
+          <option value="basecamp">Base Camp</option>
+        </FormSelect>
+        <FormSelect label="Region" id="region" value={tramp.region.toString()} onChange={handleSelectChanged} required
+          invalidMessage="Must select a region">
+          {regions && regions.map((region) => <option value={region.id.toString()} key={"region" + region.id}>{region.name}</option>)}
+        </FormSelect>
+        <Form.Group className="mb-4">
+          <Form.Label className="form-label">Description</Form.Label>
+          <DescriptionEditor description={TrampDescription(tramp)} onStateChanged={handleDescriptionChanged} />
+        </Form.Group>
+        <Form.Group className="mb-4" >
+          <Form.Label className="form-label">Grade</Form.Label>
+          <div className="px-5 mb-5">
+            <Slider range allowCross={true} min={0} max={4} value={toGradeRange(tramp)}
+              onChange={handleGradeChanged}
+              step={1} marks={marks}
+              handleStyle={[handleStyle, handleStyle]} />
+          </div>
+          <CaveatsSelect value={tramp.caveats} handleValueChanged={handleCaveatsChanged} />
+        </Form.Group>
+        <FormControl id="access" label="Access Notes" value={tramp.access} type="textarea" groupClassName="mb-4"
+          placeholder="Notes on any access permissions required" onChange={handleInputChanged} rows={3} />
+        <Form.Group className="mb-4">
+          <Form.Label className="form-label">Time Of Year</Form.Label>
+          <Row>
+            <div className="col-md-4">
+              <TimeOfYearSelector goodInSummer={tramp.goodInSummer} goodInWinter={tramp.goodInWinter}
+                handleSeasonalityChanged={handleSeasonalityChanged} />
+            </div>
+            <div className="col-md-8">
+              <Form.Control
+                name='seasonalityDescription'
+                value={tramp.seasonalityDescription}
+                placeholder={'Optionally enter some notes on what times of year this tramp is good at'}
+                onChange={handleInputChanged}
+                as='textarea'
+                rows={2}
+              />
+            </div>
+          </Row>
+        </Form.Group>
+        <Row>
+          <FormControl inputType="number" id="length" label="Distance" value={tramp.length || ""} groupClassName="mb-4 col-md-6"
+            placeholder="Approximate return distance" append={"km"} onChange={handleInputChanged} required />
+          {TrampLengthRelevant(tramp) &&
+            <Form.Group controlId="length" className="mb-4 col-md-6">
+              <Form.Label>Length</Form.Label>
+              <Form.Check
+                className="d-inline-block mx-2"
+                type="switch"
+                id="lengthRange"
+                label="Range"
+                checked={(tramp.timeHigh != -1)}
+                onChange={handleLengthIsRangeChanged}
+              />
+              <InputGroup>
+                <Form.Control
+                  className=""
+                  type="number"
+                  name="timeLow"
+                  value={tramp.timeLow || ""}
+                  placeholder=""
+                  onChange={handleInputChanged}
+                  required />
+                { (tramp.timeHigh != -1 ) && <><InputGroup.Text>{" to"}</InputGroup.Text>
+                <Form.Control
+                  className=""
+                  type="number"
+                  name="timeHigh"
+                  value={tramp.timeHigh || ""}
+                  placeholder=""
+                  onChange={handleInputChanged}
+                  /></> }
+                <InputGroup.Text>{TrampLengthUnits(tramp)}</InputGroup.Text>
+                <Form.Control.Feedback type="invalid">Must enter at least one length</Form.Control.Feedback>
+              </InputGroup>
+            </Form.Group>
+          }
+        </Row>
+        <LocationSelect onChange={handleLocationChanged} latLng={latLng} />
+        <Button type="submit" variant="primary">{props.submitLabel}</Button>
+      </Form>
+    </Row>
   )
 }
